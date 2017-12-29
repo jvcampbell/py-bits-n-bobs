@@ -1,4 +1,5 @@
 """ A standard newb 2-player tick-tack-toe game """
+""" My Milestone 1 Project on the Udemy Complete Python Bootcamp course"""
 import random
 import os
 import time
