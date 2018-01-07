@@ -1,4 +1,9 @@
+''' BlackJack game - my first attempt at an Object Oriented program
+    Probably need to spend time learning how to do OO design
+    '''
+
 import random
+import os
 
 class Player(object):
 
@@ -92,18 +97,11 @@ class Game(object):
         self.round_dealt_cards = []
         self.dealer_points = 0 # - Change to list later on - For each Ace card dealt there will be another possible score (11 or 1) 
         self.player_points = 0
-        self.player_turn = 'Player'
         self.bet = 0
         self.game_status = 'Run'
 
     def reset_round_dealt_cards(self):
         self.round_dealt_cards.clear()
-
-    def change_player_turn(self):
-        if self.player_turn == 'Player':
-            self.player_turn = 'Dealer'
-        else:
-            self.player_turn = 'Player'
 
     def get_player_bet(self,player):
         
@@ -129,15 +127,10 @@ class Game(object):
 
         return total_score
 
-    def deal_turn(self, deck, player):
+    def deal_turn(self, deck, player_turn):
         '''Deal until bust or stay '''
         
-        if self.player_turn == 'Dealer':
-            name_being_dealt = self.player_turn
-        else:
-            name_being_dealt = self.player_turn + ' '  + player.name
-
-        print('%s is dealt 2 cards:' %name_being_dealt)
+        print('%s is dealt 2 cards:' %player_turn)
 
         self.round_dealt_cards.append(deck.deal_card())
         print('\tCard [%i] is %s' %(len(self.round_dealt_cards),self.round_dealt_cards[-1].card_name))
@@ -145,41 +138,44 @@ class Game(object):
         self.round_dealt_cards.append(deck.deal_card())
         print('\tCard [%i] is %s' %(len(self.round_dealt_cards),self.round_dealt_cards[-1].card_name))
 
-        self.player_points = self.check_score()
+        if player_turn == 'Dealer':
+            self.dealer_points = self.check_score()
+        else:
+            self.player_points = self.check_score()
 
         player_action = ''
 
         while not (player_action == 'S' or self.player_points > 21 or self.dealer_points > 21): # deal till bust or stay
 
-            if self.player_turn == 'Dealer':
+            if player_turn == 'Dealer':
                 if self.dealer_points <= self.player_points:
                     player_action = 'H'
-                    print('%s has chosen to Hit' %name_being_dealt)
-                    x = input('Press <Enter> to continue....')
+                    print('%s has chosen to Hit' %player_turn)
                 else:
-                    player_action = 'S'
-                    
+                    player_action = 'S'          
             else:
                 player_action = input('Hit or Stay? (H or S)') 
             
             if player_action.upper() == 'H':
                 self.round_dealt_cards.append(deck.deal_card())
                 print('\tCard [%i] is %s' %(len(self.round_dealt_cards),self.round_dealt_cards[-1].card_name))
-                if self.player_turn == 'Player':
+
+                if player_turn == 'Player':
                     self.player_points = self.check_score()
                 else:
                     self.dealer_points = self.check_score()
 
-        if self.player_turn == 'Player':
+
+        if player_turn == 'Player':
             if self.player_points > 21:
-                print('%s has bust on %s' %(name_being_dealt, self.player_points) )
+                print('%s has bust on %s' %(player_turn, self.player_points) )
             else:
-                print('%s has stayed on %s' %(name_being_dealt, self.player_points) )
+                print('%s has stayed on %s' %(player_turn, self.player_points) )
         else:
             if self.dealer_points > 21:
-                print('%s has bust on %s' %(name_being_dealt, self.dealer_points) )
+                print('%s has bust on %s' %(player_turn, self.dealer_points) )
             else:
-                print('%s has stayed on %s' %(name_being_dealt, self.dealer_points) )
+                print('%s has stayed on %s' %(player_turn, self.dealer_points) )
 
 
     def play(self):
@@ -189,30 +185,45 @@ class Game(object):
 
         print('%s starts with %s dollars' %(player.name, player.cash))
 
-        self.get_player_bet(player)
+        while self.game_status != 'End':
 
-        if self.game_status == 'End':
-            return
-        
-        #Player's turn
-        self.deal_turn(deck, player)
-        if self.player_points > 21:
-            print("The dealer has won and the house take's all")
-        else:    
-            #Dealer's turn
-            self.change_player_turn() 
+            self.player_points = 0
+            self.dealer_points = 0
             self.reset_round_dealt_cards()
-            self.deal_turn(deck, player)
-            if self.dealer_points > 21:
-                print("The dealer has lost and the player take's all")
-                player.add_cash(self.bet*2)
-            else:
+
+            self.get_player_bet(player)
+
+            if self.game_status == 'End':
+                continue
+            
+            #Player's turn
+            self.deal_turn(deck, 'Player')
+            if self.player_points > 21:
                 print("The dealer has won and the house take's all")
-                
-        print('Player has $%s cash' %player.cash)
+            else:    
+                #Dealer's turn
+                self.reset_round_dealt_cards()
+                self.deal_turn(deck, 'Dealer')
+                if self.dealer_points > 21:
+                    print("The dealer has lost and the player take's all")
+                    player.add_cash(self.bet*2)
+                else:
+                    print("The dealer has won and the house take's all")
+                    
+            print('Player has $%s cash' %player.cash)
 
-        x = input('Press <Enter> to continue....')
+            if player.cash == 0:
+                print("No loittering! You're out of cash - out you go!")
+                self.game_status = 'End'
+
+            x = input('Press <Enter> to continue or type "End" to end the game....')
+
+            if x.upper() == 'END':
+                self.game_status = 'End'
+            else:
+                os.system('cls')
 
 
+os.system('cls')
 game = Game()
 game.play()
