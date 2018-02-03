@@ -227,3 +227,4 @@ class Game(object):
 os.system('cls')
 game = Game()
 game.play()
+
